@@ -15,7 +15,7 @@ dependencies {
     implementation("org.lwjgl.lwjgl:lwjgl_util:2.9.3")
     implementation("org.lwjgl.lwjgl:lwjgl-platform:2.9.3:natives-windows")
     implementation("org.lwjgl.lwjgl:lwjgl-platform:2.9.3:natives-linux")
-    implementation("org.lwjgl.lwjgl:lwjgl-platform:2.9.3:natives-macos")
+    implementation("org.lwjgl.lwjgl:lwjgl-platform:2.9.3:natives-osx")
 }
 
 java {
