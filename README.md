@@ -179,7 +179,7 @@ src/main/java/com/voxelsandbox/
 
 ## License
 
-MIT
+All rights reserved.
 
 ## Credits
 
