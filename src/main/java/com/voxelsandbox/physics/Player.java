@@ -1,8 +1,7 @@
 package com.voxelsandbox.physics;
 
 import com.voxelsandbox.world.World;
-import org.lwjgl.input.Keyboard;
-import org.lwjgl.input.Mouse;
+import org.lwjgl.glfw.GLFW;
 
 public class Player {
     public float x, y, z;
@@ -17,12 +16,17 @@ public class Player {
     private boolean onGround = false;
     private World world;
     private long lastRandomTeleport = 0;
+    private long window;
 
     public Player(World world) {
         this.world = world;
         this.x = World.WIDTH / 2f;
         this.y = 50;
         this.z = World.DEPTH / 2f;
+    }
+
+    public void setWindow(long window) {
+        this.window = window;
     }
 
     public void update(World world) {
@@ -32,10 +36,10 @@ public class Player {
 
     private void handleInput() {
         float moveX = 0, moveZ = 0;
-        if (Keyboard.isKeyDown(Keyboard.KEY_W) || Keyboard.isKeyDown(Keyboard.KEY_UP)) moveZ -= MOVE_SPEED;
-        if (Keyboard.isKeyDown(Keyboard.KEY_S) || Keyboard.isKeyDown(Keyboard.KEY_DOWN)) moveZ += MOVE_SPEED;
-        if (Keyboard.isKeyDown(Keyboard.KEY_A) || Keyboard.isKeyDown(Keyboard.KEY_LEFT)) moveX -= MOVE_SPEED;
-        if (Keyboard.isKeyDown(Keyboard.KEY_D) || Keyboard.isKeyDown(Keyboard.KEY_RIGHT)) moveX += MOVE_SPEED;
+        if (GLFW.glfwGetKey(window, GLFW.GLFW_KEY_W) == GLFW.GLFW_PRESS || GLFW.glfwGetKey(window, GLFW.GLFW_KEY_UP) == GLFW.GLFW_PRESS) moveZ -= MOVE_SPEED;
+        if (GLFW.glfwGetKey(window, GLFW.GLFW_KEY_S) == GLFW.GLFW_PRESS || GLFW.glfwGetKey(window, GLFW.GLFW_KEY_DOWN) == GLFW.GLFW_PRESS) moveZ += MOVE_SPEED;
+        if (GLFW.glfwGetKey(window, GLFW.GLFW_KEY_A) == GLFW.GLFW_PRESS || GLFW.glfwGetKey(window, GLFW.GLFW_KEY_LEFT) == GLFW.GLFW_PRESS) moveX -= MOVE_SPEED;
+        if (GLFW.glfwGetKey(window, GLFW.GLFW_KEY_D) == GLFW.GLFW_PRESS || GLFW.glfwGetKey(window, GLFW.GLFW_KEY_RIGHT) == GLFW.GLFW_PRESS) moveX += MOVE_SPEED;
 
         // Rotate movement by yaw
         float cosYaw = (float) Math.cos(yaw);
@@ -43,26 +47,19 @@ public class Player {
         vx += moveX * cosYaw - moveZ * sinYaw;
         vz += moveX * sinYaw + moveZ * cosYaw;
 
-        if (Keyboard.isKeyDown(Keyboard.KEY_SPACE) && onGround) {
+        if (GLFW.glfwGetKey(window, GLFW.GLFW_KEY_SPACE) == GLFW.GLFW_PRESS && onGround) {
             vy = JUMP_FORCE;
             onGround = false;
         }
 
-        if (Keyboard.isKeyDown(Keyboard.KEY_R) && System.currentTimeMillis() - lastRandomTeleport > 500) {
+        if (GLFW.glfwGetKey(window, GLFW.GLFW_KEY_R) == GLFW.GLFW_PRESS && System.currentTimeMillis() - lastRandomTeleport > 500) {
             randomTeleport();
             lastRandomTeleport = System.currentTimeMillis();
         }
 
-        if (Keyboard.isKeyDown(Keyboard.KEY_RETURN)) {
+        if (GLFW.glfwGetKey(window, GLFW.GLFW_KEY_ENTER) == GLFW.GLFW_PRESS) {
             world.save();
         }
-
-        // Mouse look
-        int dx = Mouse.getDX();
-        int dy = Mouse.getDY();
-        yaw -= dx * 0.01f;
-        pitch += dy * 0.01f;
-        pitch = Math.max(-1.57f, Math.min(1.57f, pitch));
     }
 
     private void applyPhysics() {

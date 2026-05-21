@@ -4,32 +4,35 @@ import com.voxelsandbox.world.World;
 import com.voxelsandbox.physics.Player;
 import com.voxelsandbox.render.Renderer;
 import com.voxelsandbox.render.BlockPicker;
-import org.lwjgl.input.Mouse;
+import org.lwjgl.glfw.GLFW;
 
 public class InputHandler {
     private Player player;
     private World world;
     private Renderer renderer;
     private BlockPicker blockPicker;
+    private long window;
     private static final int SELECTION_RADIUS = 3;
     private long lastClickTime = 0;
 
-    public InputHandler(Player player, World world, Renderer renderer) {
+    public InputHandler(Player player, World world, Renderer renderer, long window) {
         this.player = player;
         this.world = world;
         this.renderer = renderer;
         this.blockPicker = new BlockPicker();
-        Mouse.setGrabbed(true);
+        this.window = window;
+        player.setWindow(window);
+        GLFW.glfwSetInputMode(window, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
     }
 
     public void update() {
-        if (Mouse.isButtonDown(0)) { // Left click
+        if (GLFW.glfwGetMouseButton(window, GLFW.GLFW_MOUSE_BUTTON_LEFT) == GLFW.GLFW_PRESS) {
             if (System.currentTimeMillis() - lastClickTime > 100) {
                 placeBlock();
                 lastClickTime = System.currentTimeMillis();
             }
         }
-        if (Mouse.isButtonDown(1)) { // Right click
+        if (GLFW.glfwGetMouseButton(window, GLFW.GLFW_MOUSE_BUTTON_RIGHT) == GLFW.GLFW_PRESS) {
             if (System.currentTimeMillis() - lastClickTime > 100) {
                 breakBlock();
                 lastClickTime = System.currentTimeMillis();

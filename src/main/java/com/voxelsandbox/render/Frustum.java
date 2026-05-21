@@ -2,18 +2,27 @@ package com.voxelsandbox.render;
 
 import org.lwjgl.opengl.GL11;
 import java.nio.FloatBuffer;
+import org.lwjgl.system.MemoryUtil;
 
 public class Frustum {
     private static final int NUM_PLANES = 6;
     private float[][] planes = new float[NUM_PLANES][4];
 
     public void extractPlanes() {
+        FloatBuffer projBuf = MemoryUtil.memAllocFloat(16);
+        FloatBuffer modlBuf = MemoryUtil.memAllocFloat(16);
+        
+        GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, projBuf);
+        GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, modlBuf);
+
         float[] proj = new float[16];
         float[] modl = new float[16];
         float[] clip = new float[16];
 
-        GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, FloatBuffer.wrap(proj));
-        GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, FloatBuffer.wrap(modl));
+        projBuf.rewind();
+        modlBuf.rewind();
+        projBuf.get(proj);
+        modlBuf.get(modl);
 
         // Multiply proj * modl
         for (int i = 0; i < 4; i++) {
@@ -61,6 +70,9 @@ public class Frustum {
         planes[5][1] = clip[7] + clip[6];
         planes[5][2] = clip[11] + clip[10];
         planes[5][3] = clip[15] + clip[14];
+
+        MemoryUtil.memFree(projBuf);
+        MemoryUtil.memFree(modlBuf);
     }
 
     public boolean isCubeInFrustum(float x, float y, float z, float sizeX, float sizeY, float sizeZ) {

@@ -4,12 +4,8 @@ import com.voxelsandbox.world.World;
 import com.voxelsandbox.render.Renderer;
 import com.voxelsandbox.input.InputHandler;
 import com.voxelsandbox.physics.Player;
-import org.lwjgl.LWJGLException;
-import org.lwjgl.Sys;
-import org.lwjgl.input.Keyboard;
-import org.lwjgl.input.Mouse;
-import org.lwjgl.opengl.Display;
-import org.lwjgl.opengl.DisplayMode;
+import org.lwjgl.glfw.GLFW;
+import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
 
 import javax.swing.*;
@@ -20,6 +16,7 @@ public class VoxelSandbox {
     private static final int TARGET_TPS = 60;
     private static final long MAX_TICK_ADVANCE = 100;
 
+    private long window;
     private World world;
     private Renderer renderer;
     private Player player;
@@ -27,7 +24,7 @@ public class VoxelSandbox {
     private boolean running = true;
     private long lastSecond = 0;
     private int frameCounter = 0;
-    private long lastTime = getTime();
+    private long lastTime = System.nanoTime();
     private long tickCounter = 0;
 
     public static void main(String[] args) {
@@ -43,8 +40,8 @@ public class VoxelSandbox {
         }
     }
 
-    private void run() throws LWJGLException {
-        initDisplay();
+    private void run() {
+        initGLFW();
         try {
             initOpenGL();
             world = new World();
@@ -59,14 +56,27 @@ public class VoxelSandbox {
         }
     }
 
-    private void initDisplay() throws LWJGLException {
-        Display.setDisplayMode(new DisplayMode(WIDTH, HEIGHT));
-        Display.setTitle("Voxel Sandbox - Pre-Classic rd-132211");
-        Display.setVSyncEnabled(false);
-        Display.create();
+    private void initGLFW() {
+        if (!GLFW.glfwInit()) {
+            throw new RuntimeException("Unable to initialize GLFW");
+        }
+
+        GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MAJOR, 1);
+        GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MINOR, 1);
+        GLFW.glfwWindowHint(GLFW.GLFW_VISIBLE, GLFW.GLFW_FALSE);
+
+        window = GLFW.glfwCreateWindow(WIDTH, HEIGHT, "Voxel Sandbox - Pre-Classic rd-132211", 0, 0);
+        if (window == 0) {
+            throw new RuntimeException("Failed to create GLFW window");
+        }
+
+        GLFW.glfwMakeContextCurrent(window);
+        GLFW.glfwSwapInterval(0); // Disable vsync
+        GLFW.glfwShowWindow(window);
     }
 
     private void initOpenGL() {
+        GL.createCapabilities();
         GL11.glEnable(GL11.GL_DEPTH_TEST);
         GL11.glEnable(GL11.GL_CULL_FACE);
         GL11.glCullFace(GL11.GL_BACK);
@@ -75,16 +85,16 @@ public class VoxelSandbox {
 
     private void gameLoop() {
         long tickPeriod = 1_000_000_000 / TARGET_TPS;
-        long lastTickTime = getTime();
+        long lastTickTime = System.nanoTime();
 
-        while (running && !Display.isCloseRequested()) {
-            long currentTime = getTime();
+        while (running && !GLFW.glfwWindowShouldClose(window)) {
+            long currentTime = System.nanoTime();
             long elapsedNano = currentTime - lastTickTime;
             long ticksToRun = Math.min(MAX_TICK_ADVANCE, elapsedNano / tickPeriod);
 
             // Process input
             inputHandler.update();
-            if (Keyboard.isKeyDown(Keyboard.KEY_ESCAPE)) {
+            if (GLFW.glfwGetKey(window, GLFW.GLFW_KEY_ESCAPE) == GLFW.GLFW_PRESS) {
                 running = false;
             }
 
@@ -109,7 +119,8 @@ public class VoxelSandbox {
                 frameCounter = 0;
             }
 
-            Display.update();
+            GLFW.glfwSwapBuffers(window);
+            GLFW.glfwPollEvents();
         }
 
         world.save();
@@ -119,10 +130,7 @@ public class VoxelSandbox {
         if (world != null) {
             world.save();
         }
-        Display.destroy();
-    }
-
-    private static long getTime() {
-        return Sys.getTime() * 1_000_000_000 / Sys.getTimerResolution();
+        GLFW.glfwDestroyWindow(window);
+        GLFW.glfwTerminate();
     }
 }

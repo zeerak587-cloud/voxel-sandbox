@@ -4,8 +4,8 @@ import com.voxelsandbox.world.World;
 import com.voxelsandbox.world.Chunk;
 import com.voxelsandbox.physics.Player;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.util.glu.GLU;
-import java.nio.FloatBuffer;
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
 
 public class Renderer {
     private static final float FOV = 70f;
@@ -17,12 +17,15 @@ public class Renderer {
     private Frustum frustum;
     private TextureManager textureManager;
     private BlockPicker blockPicker;
-    private long lastPickTime = 0;
+    private Matrix4f projMatrix;
+    private Matrix4f viewMatrix;
 
     public Renderer() {
         frustum = new Frustum();
         textureManager = new TextureManager();
         blockPicker = new BlockPicker();
+        projMatrix = new Matrix4f();
+        viewMatrix = new Matrix4f();
     }
 
     public void render(World world, Player player) {
@@ -56,7 +59,8 @@ public class Renderer {
         GL11.glEnable(GL11.GL_FOG);
         GL11.glFogf(GL11.GL_FOG_START, -10);
         GL11.glFogf(GL11.GL_FOG_END, 20);
-        GL11.glFog(GL11.GL_FOG_COLOR, FloatBuffer.wrap(new float[]{14f / 255f, 11f / 255f, 10f / 255f, 1.0f}));
+        float[] fogColor = {14f / 255f, 11f / 255f, 10f / 255f, 1.0f};
+        GL11.glFog(GL11.GL_FOG_COLOR, fogColor);
         GL11.glFogi(GL11.GL_FOG_MODE, GL11.GL_LINEAR);
 
         for (Chunk[] chunkRow : world.getAllChunks()) {
@@ -77,19 +81,34 @@ public class Renderer {
     private void setupProjection() {
         GL11.glMatrixMode(GL11.GL_PROJECTION);
         GL11.glLoadIdentity();
-        GLU.gluPerspective(FOV, (float) WIDTH / HEIGHT, NEAR, FAR);
+        float aspect = (float) WIDTH / HEIGHT;
+        float fovRad = (float) Math.toRadians(FOV);
+        float f = (float) (1.0f / Math.tan(fovRad / 2.0f));
+        projMatrix.identity();
+        projMatrix.setPerspective(fovRad, aspect, NEAR, FAR);
+        GL11.glMultMatrixf(projMatrix.get(new float[16]));
         GL11.glMatrixMode(GL11.GL_MODELVIEW);
     }
 
     private void setupView(Player player) {
         GL11.glLoadIdentity();
-        GLU.gluLookAt(
-                player.x, player.y + 1.62f, player.z,
-                player.x + (float) Math.cos(player.yaw) * (float) Math.cos(player.pitch),
-                player.y + 1.62f + (float) Math.sin(player.pitch),
-                player.z + (float) Math.sin(player.yaw) * (float) Math.cos(player.pitch),
-                0, 1, 0
+        viewMatrix.identity();
+        
+        float eyeX = player.x;
+        float eyeY = player.y + 1.62f;
+        float eyeZ = player.z;
+        
+        float centerX = eyeX + (float) Math.cos(player.yaw) * (float) Math.cos(player.pitch);
+        float centerY = eyeY + (float) Math.sin(player.pitch);
+        float centerZ = eyeZ + (float) Math.sin(player.yaw) * (float) Math.cos(player.pitch);
+        
+        viewMatrix.lookAt(
+            eyeX, eyeY, eyeZ,
+            centerX, centerY, centerZ,
+            0, 1, 0
         );
+        
+        GL11.glMultMatrixf(viewMatrix.get(new float[16]));
     }
 
     private void drawSelectionOverlay(BlockPicker picker) {
