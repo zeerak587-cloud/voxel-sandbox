@@ -1,6 +1,7 @@
 package com.voxelsandbox.render;
 
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL11C;
 import java.nio.FloatBuffer;
 import org.lwjgl.system.MemoryUtil;
 
@@ -9,15 +10,15 @@ public class Frustum {
     private float[][] planes = new float[NUM_PLANES][4];
 
     public void extractPlanes() {
-        FloatBuffer projBuf = MemoryUtil.memAllocFloat(16);
-        FloatBuffer modlBuf = MemoryUtil.memAllocFloat(16);
-        
-        GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, projBuf);
-        GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, modlBuf);
-
         float[] proj = new float[16];
         float[] modl = new float[16];
         float[] clip = new float[16];
+
+        FloatBuffer projBuf = MemoryUtil.memAllocFloat(16);
+        FloatBuffer modlBuf = MemoryUtil.memAllocFloat(16);
+
+        GL11C.glGetFloatv(GL11.GL_PROJECTION_MATRIX, projBuf);
+        GL11C.glGetFloatv(GL11.GL_MODELVIEW_MATRIX, modlBuf);
 
         projBuf.rewind();
         modlBuf.rewind();
