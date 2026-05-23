@@ -48,7 +48,7 @@ public class VoxelSandbox {
             world.load();
             renderer = new Renderer();
             player = new Player(world);
-            inputHandler = new InputHandler(player, world, renderer);
+            inputHandler = new InputHandler(player, world, renderer, window);
 
             gameLoop();
         } finally {

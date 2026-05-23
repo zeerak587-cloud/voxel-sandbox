@@ -5,7 +5,8 @@ import com.voxelsandbox.world.Chunk;
 import com.voxelsandbox.physics.Player;
 import org.lwjgl.opengl.GL11;
 import org.joml.Matrix4f;
-import org.joml.Vector3f;
+import java.nio.FloatBuffer;
+import org.lwjgl.system.MemoryUtil;
 
 public class Renderer {
     private static final float FOV = 70f;
@@ -59,8 +60,11 @@ public class Renderer {
         GL11.glEnable(GL11.GL_FOG);
         GL11.glFogf(GL11.GL_FOG_START, -10);
         GL11.glFogf(GL11.GL_FOG_END, 20);
-        float[] fogColor = {14f / 255f, 11f / 255f, 10f / 255f, 1.0f};
+        FloatBuffer fogColor = MemoryUtil.memAllocFloat(4);
+        fogColor.put(14f / 255f).put(11f / 255f).put(10f / 255f).put(1.0f);
+        fogColor.flip();
         GL11.glFog(GL11.GL_FOG_COLOR, fogColor);
+        MemoryUtil.memFree(fogColor);
         GL11.glFogi(GL11.GL_FOG_MODE, GL11.GL_LINEAR);
 
         for (Chunk[] chunkRow : world.getAllChunks()) {
@@ -83,10 +87,13 @@ public class Renderer {
         GL11.glLoadIdentity();
         float aspect = (float) WIDTH / HEIGHT;
         float fovRad = (float) Math.toRadians(FOV);
-        float f = (float) (1.0f / Math.tan(fovRad / 2.0f));
         projMatrix.identity();
         projMatrix.setPerspective(fovRad, aspect, NEAR, FAR);
-        GL11.glMultMatrixf(projMatrix.get(new float[16]));
+        FloatBuffer fb = MemoryUtil.memAllocFloat(16);
+        projMatrix.get(fb);
+        fb.flip();
+        GL11.glMultMatrixf(fb);
+        MemoryUtil.memFree(fb);
         GL11.glMatrixMode(GL11.GL_MODELVIEW);
     }
 
@@ -108,7 +115,11 @@ public class Renderer {
             0, 1, 0
         );
         
-        GL11.glMultMatrixf(viewMatrix.get(new float[16]));
+        FloatBuffer fb = MemoryUtil.memAllocFloat(16);
+        viewMatrix.get(fb);
+        fb.flip();
+        GL11.glMultMatrixf(fb);
+        MemoryUtil.memFree(fb);
     }
 
     private void drawSelectionOverlay(BlockPicker picker) {
